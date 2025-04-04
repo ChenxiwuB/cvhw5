@@ -24,8 +24,8 @@ class Model:
         #           [1, number_classes]
         # Fill in the below
         # functions with the correct shapes for both parameters
-        self.W = np.random.rand()
-        self.b = np.zeros()
+        self.W = np.random.randn(self.input_size, self.num_classes) * 0.01
+        self.b = np.zeros((1, self.num_classes))
 
     def forward_pass(self, inputs):
         """
@@ -59,12 +59,10 @@ class Model:
         :param inputs: a batch of train images
         :return: probabilities for each per image
         """
-        # TODO: First, work out the size of `inputs`, `self.W`, `self.b`
-
-        # TODO: Calculate response for each logits
-
-        # TODO: Obtain probabilities by using softmax on the logits
-        probabilities = None
+        logits = np.dot(inputs, self.W) + self.b
+        logits_stable = logits - np.max(logits, axis=1, keepdims=True)
+        exp_logits = np.exp(logits_stable)
+        probabilities = exp_logits / np.sum(exp_logits, axis=1, keepdims=True)
         return probabilities
 
     @staticmethod
@@ -84,7 +82,7 @@ class Model:
         # TODO: compute loss value
         # Note that while probabilities is [batch_size, num_classes], in our
         # problem, batch_size = 1, so you will have to index into the 0th element
-        loss = None
+        loss = -np.log(probabilities[0, gt_label] + 1e-10)
         return loss
 
     @staticmethod
@@ -112,7 +110,13 @@ class Model:
         # TODO: Back propagation: use gradient descent to update parameters
 
         # TODO: Reshape train image data to be matrix, dimension [img.size, 1]
-        gradW, gradB = None, None
+        p = probabilities[0]  
+        one_hot = np.zeros_like(p)
+        one_hot[gt_label] = 1
+        diff = p - one_hot
+
+        gradW = np.outer(img, diff)
+        gradB = diff
         return gradW, gradB
 
     def gradient_descent(self, gradW, gradB):
@@ -125,8 +129,8 @@ class Model:
         :param gradB: gradient for biases
         :return: None
         """
-        # TODO: Modify parameters with summed updates
-        pass
+        self.W -= self.learning_rate * gradW
+        self.b -= self.learning_rate * gradB.reshape(1, -1)
 
     def train_nn(self):
         """
@@ -155,17 +159,18 @@ class Model:
 
                 # TODO: 1. Calculate probabilities from calling forward pass
                 #       on img
-                probabilities = None
+                probabilities = self.forward_pass(img.reshape(1, -1))
 
                 # TODO: 2. Calculate the loss from probabilities, loss_sum =
                 #       loss_sum + your_loss_over_all_classes
-                loss = None
+                loss = self.loss(probabilities, gt_label)
+                loss_sum += loss
 
                 # TODO: 3. Calculate gradW, gradB from back propagation
-                gradW, gradB = None
+                gradW, gradB = Model.back_propagation(img, probabilities, gt_label)
 
                 # TODO: 4. Update self.W and self.B with gradient descent
-                
+                self.gradient_descent(gradW, gradB)
                 
             # to calculate acuuracy for each epoch on the testing set
             # epoch is a concept for neural network training, so using accuracy_nn for calculation
