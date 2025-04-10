@@ -65,7 +65,7 @@ class YourModel(tf.keras.Model):
             MaxPool2D(pool_size=2, name="pool3"),
             Dropout(0.5, name="dropout1"),
             Flatten(name="flatten"),
-            Dense(256, activation="relu", name="dense1"),
+            Dense(128, activation="relu", name="dense1"),
             Dropout(0.5, name="dropout2"),
             Dense(15, activation="softmax", name="output")
         ]
@@ -154,7 +154,7 @@ class VGGModel(tf.keras.Model):
         # TODO: Make all layers in self.vgg16 non-trainable. This will freeze the
         #       pretrained VGG16 weights into place so that only the classificaiton
         #       head is trained.
-
+        self.vgg16 = tf.keras.Sequential(self.vgg16, name="vgg_base")
         self.vgg16.trainable = False
         
         # TODO: Write a classification head for our 15-scene classification task.
@@ -167,7 +167,6 @@ class VGGModel(tf.keras.Model):
         ]
 
         # Don't change the below:
-        self.vgg16 = tf.keras.Sequential(self.vgg16, name="vgg_base")
         self.head = tf.keras.Sequential(self.head, name="vgg_head")
 
     def call(self, x):
