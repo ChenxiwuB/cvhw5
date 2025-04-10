@@ -20,6 +20,7 @@ class YourModel(tf.keras.Model):
         # TASK 1
         # TODO: Select an optimizer for your network (see the documentation
         #       for tf.keras.optimizers)
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=hp.learning_rate)
 
         # TASK 1
         # TODO: Build your own convolutional neural network, using Dropout at
@@ -53,7 +54,20 @@ class YourModel(tf.keras.Model):
         #             explicitly reshape any tensors anywhere in your network.
 
         self.architecture = [
-              ## Add layers here separated by commas.
+            Conv2D(32, kernel_size=3, strides=1, padding="same",
+                   activation="relu", name="conv1"),
+            MaxPool2D(pool_size=2, name="pool1"),
+            Conv2D(64, kernel_size=3, strides=1, padding="same",
+                   activation="relu", name="conv2"),
+            MaxPool2D(pool_size=2, name="pool2"),
+            Conv2D(128, kernel_size=3, strides=1, padding="same",
+                   activation="relu", name="conv3"),
+            MaxPool2D(pool_size=2, name="pool3"),
+            Dropout(0.5, name="dropout1"),
+            Flatten(name="flatten"),
+            Dense(256, activation="relu", name="dense1"),
+            Dropout(0.5, name="dropout2"),
+            Dense(15, activation="softmax", name="output")
         ]
 
         #       Don't change the line below. This line creates an instance
@@ -80,8 +94,8 @@ class YourModel(tf.keras.Model):
         # TASK 1
         # TODO: Select a loss function for your network 
         #       (see the documentation for tf.keras.losses)
-
-        pass
+        loss = tf.keras.losses.sparse_categorical_crossentropy(labels, predictions)
+        return tf.reduce_mean(loss)
 
 
 class VGGModel(tf.keras.Model):
@@ -92,7 +106,7 @@ class VGGModel(tf.keras.Model):
         # TODO: Select an optimizer for your network (see the documentation
         #       for tf.keras.optimizers)
 
-        self.optimizer = None
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=hp.learning_rate)
 
         # Don't change the below:
 
@@ -136,13 +150,21 @@ class VGGModel(tf.keras.Model):
         ]
 
         # TASK 3
+        
         # TODO: Make all layers in self.vgg16 non-trainable. This will freeze the
         #       pretrained VGG16 weights into place so that only the classificaiton
         #       head is trained.
 
+        self.vgg16.trainable = False
+        
         # TODO: Write a classification head for our 15-scene classification task.
 
-        self.head = []
+        self.head = [
+            Flatten(name="flatten"),
+            Dense(512, activation="relu", name="dense1"),
+            Dropout(0.25, name="dropout"),
+            Dense(15, activation="softmax", name="pred")
+        ]
 
         # Don't change the below:
         self.vgg16 = tf.keras.Sequential(self.vgg16, name="vgg_base")
@@ -165,5 +187,6 @@ class VGGModel(tf.keras.Model):
         #       for tf.keras.losses)
         #       Read the documentation carefully, some might not work with our 
         #       model!
-
-        pass
+        
+        loss = tf.keras.losses.sparse_categorical_crossentropy(labels, predictions)
+        return tf.reduce_mean(loss)
